@@ -7,15 +7,13 @@ class Post extends DB{
     private $img;
     private $body;
     private $user_name;
-    private $created_at;
+    // private $created_at;
 
     public function __construct(){
         parent::__construct();
     }
 
     public function createPost($post, $img, $date){
-        print_r($post);
-        
         $this->user_name = $_POST['user_name'];
         $this->title = $_POST['blog_ttl'];
         $this->sub_title = $_POST['blog_subttl'];
@@ -30,40 +28,46 @@ class Post extends DB{
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $user_id = $row['user_id'];
         
-        
-        // $this->img = $this->storeImag($img);
-        // print_r($this->img);
-        
         $query = "INSERT INTO posts VALUES (null, '".$user_id."', '".$this->title."', '".$this->sub_title."', '".$this->img."', '".$this->body."', '".$this->created_at."')";
-        $this->conn->exec($query);
-        // $stmt = $this->conn->prepare($query);
-        // $stmt->execute();
-        // if (!$stmt->execute()) {
-        //     echo "Error: " . $stmt . "<br>" . print_r($this->conn->errorInfo());;
-        // }
+        $stmt = $this->conn->prepare($query);
+
+        if (!$stmt->execute()) {
+            echo "Error: " . $stmt . "<br>" . print_r($this->conn->errorInfo());;
+        }
     }
 
-    public function storeImag($image)
-    {
-        // $target_dir   = "../assets/imgs/uploads/";
-        // $target_dir = $target_dir . basename($_FILES['blog_img']['name']); 
-        // $this->img = ($_FILES['blog_img']['name']); 
+    public function selectAllPosts(){
+        $query = "SELECT posts.post_id, posts.user_id, posts.title, posts.sub_title, posts.post_img, posts.body, posts.created_at, users.username
+                    FROM posts
+                    INNER JOIN users 
+                    ON posts.user_id = users.user_id";
 
-        // move_uploaded_file($_FILES['blog_img']['tmp_name'], $target_dir);
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if (!$stmt->execute()) {
+            return "Error: " . $stmt . "<br>" . $this->conn->errorInfo();
+        }
 
-        // return $new_file_name;
+        return $rows;
+    }
 
-        $img_dir   = "../assets/imgs/uploads/";
-        $path      = $blog_img['name'];
-        $temp_name = $blog_img['tmp_name'];
+    public function selectOnePost($get){
+        $post_id = $_GET['post_id'];
 
-        $target_file = $img_dir.basename($path);
-        $img_file_type = strtolower(pathinfo($target_file, PATHINFO_EXTENSION)); // png
+        $query = "SELECT posts.post_id, posts.user_id, posts.title, posts.sub_title, posts.post_img, posts.body, posts.created_at, users.username
+                    FROM posts
+                    INNER JOIN users 
+                    ON posts.user_id = users.user_id
+                    WHERE posts.post_id ='". $post_id."'";
 
-        $new_file_name=time().".".$img_file_type;
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$stmt->execute()) {
+            return "Error: " . $stmt . "<br>" . $this->conn->errorInfo();
+        }
 
-        move_uploaded_file($temp_name, $img_dir.$new_file_name);
-
-        return $new_file_name;
+        return $row;
     }
 }
